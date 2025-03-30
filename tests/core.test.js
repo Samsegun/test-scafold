@@ -1,5 +1,5 @@
 import { it, expect, describe } from "vitest";
-import { calculateDiscount, getCoupons } from "../src/core";
+import { calculateDiscount, getCoupons, validateUserInput } from "../src/core";
 
 describe("coupons", () => {
     const coupons = getCoupons();
@@ -34,8 +34,56 @@ describe("coupons", () => {
 });
 
 describe("calculateDiscount", () => {
+    // positive testing
     it("should return discounted price if given valid code", () => {
-        const result = calculateDiscount(100, "SAVE10");
-        expect(result).toBe(90);
+        expect(calculateDiscount(100, "SAVE10")).toBe(90);
+        expect(calculateDiscount(100, "SAVE20")).toBe(80);
+    });
+
+    // negative testing
+    it("should handle non-numeric price", () => {
+        expect(calculateDiscount("100", "SAVE10")).toMatch(/invalid/i);
+    });
+    it("should handle negative price", () => {
+        expect(calculateDiscount(-10, "SAVE10")).toMatch(/invalid/i);
+    });
+    it("should handle non-string discount code", () => {
+        expect(calculateDiscount(50, 20)).toMatch(/invalid/i);
+    });
+    it("should handle invalid discount code", () => {
+        expect(calculateDiscount(50, "SAVE2")).toBe(50);
+    });
+});
+
+describe("userInput", () => {
+    // positive test
+    it("should match validation successful", () => {
+        expect(validateUserInput("sam", 20)).toMatch(/successful/i);
+    });
+
+    // negative tests
+    it("should return an error if username is not a string", () => {
+        expect(validateUserInput(200, 19)).toMatch(/invalid/i);
+    });
+    it("should return an error if username is less than 3 characters", () => {
+        expect(validateUserInput("pi", 19)).toMatch(/invalid/i);
+    });
+    it("should return an error if username is longer than 256 characters", () => {
+        expect(validateUserInput("a".repeat(256), 19)).toMatch(/invalid/i);
+    });
+
+    it("should return an error if age is not a number", () => {
+        expect(validateUserInput("john", "20")).toMatch(/invalid/i);
+    });
+    it("should return an error if age is less than 18", () => {
+        expect(validateUserInput("john", 17)).toMatch(/invalid/i);
+    });
+    it("should return an error if age is greater than 100", () => {
+        expect(validateUserInput("john", 101)).toMatch(/invalid/i);
+    });
+
+    it("should return an error if age and username is invalid", () => {
+        expect(validateUserInput("", 2)).toMatch(/invalid username/i);
+        expect(validateUserInput("", 2)).toMatch(/invalid age/i);
     });
 });
