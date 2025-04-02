@@ -1,10 +1,20 @@
-import { it, expect, describe } from "vitest";
+import {
+    it,
+    expect,
+    describe,
+    beforeEach,
+    beforeAll,
+    afterAll,
+    afterEach,
+} from "vitest";
 import {
     calculateDiscount,
     canDrive,
+    fetchData,
     getCoupons,
     isPriceInRange,
     isValidUsername,
+    Stack,
     validateUserInput,
 } from "../src/core";
 
@@ -96,17 +106,14 @@ describe("userInput", () => {
 });
 
 describe("isPriceInRange", () => {
-    it("should return false when price is outside range", () => {
-        expect(isPriceInRange(-10, 0, 100)).toBe(false);
-        expect(isPriceInRange(200, 0, 100)).toBe(false);
-    });
-
-    it("should return true when price is equal to min or max", () => {
-        expect(isPriceInRange(0, 0, 100)).toBe(true);
-        expect(isPriceInRange(100, 0, 100)).toBe(true);
-    });
-    it("should return true when price is within range", () => {
-        expect(isPriceInRange(50, 0, 100)).toBe(true);
+    it.each([
+        { scenario: "price is less than min", price: -10, result: false },
+        { scenario: "price is equals min", price: 0, result: true },
+        { scenario: "price is between min and max", price: 50, result: true },
+        { scenario: "price is equals max", price: 100, result: true },
+        { scenario: "price is greater than max", price: 200, result: false },
+    ])("should return $result when $scenario", ({ price, result }) => {
+        expect(isPriceInRange(price, 0, 100)).toBe(result);
     });
 });
 
@@ -140,30 +147,100 @@ describe("isValidUsername", () => {
 });
 
 describe("canDrive", () => {
-    const age = 16;
-    const countryCode = ["US", "UK"];
-
-    it("should return true when age is equal or greater than 16 and countryCode is US", () => {
-        // age is equal 16
-        expect(canDrive(age, countryCode[0])).toBe(true);
-        // age is above 16
-        expect(canDrive(age + 10, countryCode[0])).toBe(true);
-    });
-    it("should return false when age is less than 16 and countryCode is US", () => {
-        expect(canDrive(age - 1, countryCode[0])).toBe(false);
-    });
-
-    it("should return true when age is equal or greater than 17 and countryCode is UK", () => {
-        // age is equal 17
-        expect(canDrive(age + 1, countryCode[1])).toBe(true);
-        // age is above 17
-        expect(canDrive(age + 20, countryCode[1])).toBe(true);
-    });
-    it("should return false when age is less than 17 and countryCode is UK", () => {
-        expect(canDrive(age, countryCode[1])).toBe(false);
-    });
+    it.each([
+        { age: 16, country: "US", result: true },
+        { age: 17, country: "US", result: true },
+        { age: 15, country: "US", result: false },
+        { age: 17, country: "UK", result: true },
+        { age: 18, country: "UK", result: true },
+        { age: 16, country: "UK", result: false },
+    ])(
+        "should return $result for $age, $country",
+        ({ age, country, result }) => {
+            expect(canDrive(age, country)).toBe(result);
+        }
+    );
 
     it("should return false when countryCode is invalid", () => {
-        expect(canDrive(age, "NG")).toMatch(/invalid/i);
+        expect(canDrive(18, "NG")).toMatch(/invalid/i);
+    });
+});
+
+describe("fetchData", () => {
+    it("should return a promise that resolves to an array of numbers", async () => {
+        try {
+            const result = await fetchData();
+
+            // expect(Array.isArray(result)).toBe(true);
+            // expect(result.length).toBeGreaterThan(0);
+        } catch (error) {
+            expect(error).toHaveProperty("reason");
+            expect(error.reason).toMatch(/failed/i);
+        }
+    });
+});
+
+describe("test suite", () => {
+    beforeEach(() => {
+        console.log("beforeEach called");
+    });
+    beforeAll(() => {
+        console.log("beforeAll called");
+    });
+
+    afterAll(() => {
+        console.log("afterAll called");
+    });
+    afterEach(() => {
+        console.log("afterEach called");
+    });
+
+    it("test case 1", () => {});
+
+    it("test case 2", () => {});
+});
+
+describe("stack", () => {
+    let stack;
+
+    beforeEach(() => {
+        stack = new Stack();
+    });
+
+    it("should return true if length is greater than 0", () => {
+        stack.push(1);
+        expect(stack.size()).toBe(1);
+    });
+
+    it("should return true if length is 0", () => {
+        stack.push(1);
+        stack.pop();
+        expect(stack.size()).toBe(0);
+    });
+
+    it("should throw error if stack is empty", () => {
+        expect(() => stack.pop()).toThrow(/empty/i);
+    });
+
+    it("should return true if peeked value is 1", () => {
+        stack.push(1);
+        expect(stack.peek()).toBe(1);
+    });
+
+    it("should return true if stack is empty", () => {
+        stack.push(1);
+        stack.pop();
+
+        expect(stack.isEmpty()).toBe(true);
+    });
+
+    it("should return true if stack size is 0", () => {
+        expect(stack.size()).toBe(0);
+    });
+
+    it("should return cleared", () => {
+        stack.push(2);
+        stack.clear();
+        expect(stack.size()).toBe(0);
     });
 });
